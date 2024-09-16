@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/AHFn7Vbn)
 # Superjoin Hiring Assignment
 
 ### Welcome to Superjoin's hiring assignment! 🚀
@@ -58,4 +59,46 @@ We're available at techhiring@superjoin.ai for all queries.
 All the best ✨.
 
 ## Developer's Section
-*Add your video here, and your approach to the problem (optional). Leave some comments for us here if you want, we will be reading this :)*
+[Click here to view the video!](https://drive.google.com/file/d/1lCTwVk7T03Okn1UWqmnKAbyFKomfWaBY/view?usp=sharing)
+
+Real-time Synchronization Between Google Sheets and MySQL
+- This project implements a system for real-time synchronization between Google Sheets and a MySQL database. It ensures that any changes made in one (Google Sheets or MySQL) are reflected in the other while handling locking for concurrency, and API rate limiting.
+
+
+✅ My code's working just fine! 🥳  
+✅ I have recorded a video showing it working and embedded it in the README ▶️  
+✅ I have tested all the normal working cases 😎  
+✅ I have even solved some edge cases (brownie points) 💪  
+✅ I added my very planned-out approach to the problem at the end of this README 📜  
+
+
+Key Features
+- Bi-directional sync: Detect changes in Google Sheets and update the database, and vice versa.
+- CRUD Operations: Supports Create, Read, Update, and Delete for both platforms.
+- Locking Mechanism: Ensures no simultaneous conflicting updates using a syn.lock file.
+- Rate Limiting: Prevents overwhelming Google API calls.
+
+Google Sheets Setup:
+- Obtain Google Sheets API credentials (service account) and configure them in service_account.json.
+Set the SPREADSHEET_ID and RANGE_NAME in your script.
+
+MySQL Setup:
+- Create a MySQL database and table (e.g., recipe) to store the data.
+- Set your MySQL connection details (username, password, host) in the Python script.
+
+Sync Operations:
+- Google Sheets to MySQL: Changes made in Google Sheets trigger updates to the database.
+- MySQL to Google Sheets: A task scheduler periodically syncs data from the database to Google Sheets.
+
+Locking Mechanism:
+- A syn.lock file is used to ensure only one sync operation happens at a time, preventing conflicts.
+
+Task Scheduling:
+- Use a task scheduler (e.g., cron on Linux or Windows Task Scheduler) to periodically sync the MySQL database with Google Sheets.
+- 
+Code Overview
+- Flask API: Receives and processes changes from Google Sheets, updating MySQL accordingly.
+- ngrok: The flask server is tunneled onto the internet using ngrok.
+- Google Sheets API: Reads and writes data to Google Sheets.
+- MySQL Connection: Handles fetching and updating the database.
+- Locking Logic: Ensures that only one sync operation can occur at any given time using the syn.lock file.
