@@ -3,6 +3,29 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 '''
+Locking functions
+'''
+import os
+import time
+
+# Path to the lock file
+LOCK_FILE = "sync.lock"
+
+def acquire_lock():
+    """Acquire a lock to prevent simultaneous writes."""
+    while os.path.exists(LOCK_FILE):
+        print("Another sync process is running. Waiting for the lock to be released...")
+        time.sleep(1)  # Wait and retry until the lock is released
+    open(LOCK_FILE, 'w').close()  # Create the lock file to indicate that the process has the lock
+
+def release_lock():
+    """Release the lock once the process is done."""
+    if os.path.exists(LOCK_FILE):
+        os.remove(LOCK_FILE)  # Remove the lock file
+
+
+
+'''
 Data from MySQL
 '''
 def fetch_mysql_data():
@@ -108,22 +131,34 @@ def write_to_mysql(data):
     cnx.close()
 
 '''
-Main logic: Compare Google Sheets and MySQL data, then sync accordingly
+Sync MySQL data to Google Sheets
 '''
-def sync_sheets_and_database():
+def sync_mysql_to_sheets():
     mysql_data = fetch_mysql_data()  # Get data from MySQL
+    print("Syncing MySQL data to Google Sheets")
+    write_to_sheets(mysql_data)
+
+'''
+Sync Google Sheets data to MySQL
+'''
+def sync_sheets_to_mysql():
     sheets_data = fetch_sheets_data()  # Get data from Google Sheets
+    print("Syncing Google Sheets data to MySQL")
+    write_to_mysql(sheets_data)
 
-    print("sheets_data", sheets_data)
-    print("mysql_data", mysql_data)
+'''
+Main sync logic using lock mechanism
+'''
+def sync_sheets_and_database(sync_direction='mysql_to_sheets'):
+    acquire_lock()  # Acquire the lock at the start
 
-    # Compare the two datasets
-    if mysql_data == sheets_data:
-        print("Data is consistent. Writing latest MySQL data to Google Sheets.")
-        write_to_sheets(mysql_data)  # Data matches, write MySQL data to Google Sheets
-    else:
-        print("Data is inconsistent. Writing Google Sheets data to MySQL.")
-        write_to_mysql(sheets_data)  # Data doesn't match, write Google Sheets data to MySQL
+    try:
+        if sync_direction == 'mysql_to_sheets':
+            sync_mysql_to_sheets()  # Sync data from MySQL to Google Sheets
+        elif sync_direction == 'sheets_to_mysql':
+            sync_sheets_to_mysql()  # Sync data from Google Sheets to MySQL
+    finally:
+        release_lock()  # Always release the lock at the end
 
-# Run the sync
-sync_sheets_and_database()
+
+sync_sheets_and_database(sync_direction='mysql_to_sheets')  # Sync MySQL to Google Sheets
