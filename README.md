@@ -65,11 +65,12 @@ Real-time Synchronization Between Google Sheets and MySQL
 - This project implements a system for real-time synchronization between Google Sheets and a MySQL database. It ensures that any changes made in one (Google Sheets or MySQL) are reflected in the other while handling locking for concurrency, and API rate limiting.
 
 
-✅ My code's working just fine! 🥳
-✅ I have recorded a video showing it working and embedded it in the README ▶️
-✅ I have tested all the normal working cases 😎
-✅ I have even solved some edge cases (brownie points) 💪
-✅ I added my very planned-out approach to the problem at the end of this README 📜
+✅ My code's working just fine! 🥳  
+✅ I have recorded a video showing it working and embedded it in the README ▶️  
+✅ I have tested all the normal working cases 😎  
+✅ I have even solved some edge cases (brownie points) 💪  
+✅ I added my very planned-out approach to the problem at the end of this README 📜  
+
 
 Key Features
 - Bi-directional sync: Detect changes in Google Sheets and update the database, and vice versa.
