@@ -1,3 +1,4 @@
+import time
 from flask import Flask, request, jsonify
 import mysql.connector
 from google.oauth2.service_account import Credentials
@@ -5,7 +6,62 @@ from googleapiclient.discovery import build
 
 app = Flask(__name__)
 
-# Endpoint to update or insert into MySQL database from Google Sheets data
+# Global variable to track API request count and time
+last_request_time = time.time()
+REQUEST_LIMIT = 60  # Number of allowed requests per minute
+REQUEST_BATCH_SIZE = 10  # How many requests to handle before waiting
+
+
+def rate_limit():
+    global last_request_time
+    current_time = time.time()
+
+    # Check if the request rate exceeds the limit
+    if (current_time - last_request_time) < (60 / REQUEST_LIMIT):
+        time_to_wait = (60 / REQUEST_LIMIT) - (current_time - last_request_time)
+        print(f"Rate limit reached. Waiting {time_to_wait} seconds.")
+        time.sleep(time_to_wait)
+
+    last_request_time = time.time()
+
+
+# Function to batch write data to Google Sheets (to avoid exceeding API rate limits)
+def batch_write_to_sheets(data, batch_size=REQUEST_BATCH_SIZE):
+    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+    SERVICE_ACCOUNT_FILE = "path_to_your_service_account_key.json"
+    credentials = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    service = build('sheets', 'v4', credentials=credentials)
+
+    SPREADSHEET_ID = 'your_spreadsheet_id'
+    RANGE_NAME = 'Sheet1!A1:F'
+
+    batch_data = []
+    for row in data:
+        batch_data.append(row)
+        if len(batch_data) >= batch_size:  # Write in batches of batch_size rows
+            body = {'values': batch_data}
+            rate_limit()  # Check if rate limiting is necessary
+            service.spreadsheets().values().update(
+                spreadsheetId=SPREADSHEET_ID,
+                range=RANGE_NAME,
+                valueInputOption='RAW',
+                body=body
+            ).execute()
+            batch_data = []
+            time.sleep(1)  # Avoid hitting API limits for burst calls
+
+    # Write any remaining data
+    if batch_data:
+        body = {'values': batch_data}
+        rate_limit()  # Check if rate limiting is necessary
+        service.spreadsheets().values().update(
+            spreadsheetId=SPREADSHEET_ID,
+            range=RANGE_NAME,
+            valueInputOption='RAW',
+            body=body
+        ).execute()
+
+
 @app.route('/update-database', methods=['POST'])
 def update_database():
     try:
@@ -67,6 +123,7 @@ def update_database():
     except Exception as e:
         # Handle any errors that occur during processing
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
