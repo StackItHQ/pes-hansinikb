@@ -30,39 +30,13 @@ function onEdit(e) {
     }
   }
 
-  // If the row is not empty, send the data to the Flask server for conflict resolution
+  // If the row is not empty, send the data to the Flask server
   if (!rowEmpty) {
-    checkForConflicts(payload);
+    sendToDatabase(payload);
   }
 }
 
-// Function to check if there's a conflict between Google Sheets data and the database
-function checkForConflicts(payload) {
-  var options = {
-    'method': 'post',
-    'contentType': 'application/json',  // Set Content-Type to JSON
-    'payload': JSON.stringify(payload)  // Convert the payload to a JSON string
-  };
-
-  try {
-    // Send a request to the Flask server to check if there is a conflict
-    var checkResponse = UrlFetchApp.fetch('https://e5c0-2401-4900-1f25-2e8c-6496-3bc4-fb21-c731.ngrok-free.app/check-database', options);
-    var checkData = JSON.parse(checkResponse.getContentText());
-
-    // If there is a conflict, revert the Google Sheets row to the database data
-    if (checkData.conflict) {
-      Logger.log("Conflict detected. Database data will be preferred.");
-      revertGoogleSheetRow(payload.row, checkData.database_row);
-    } else {
-      // If no conflict, proceed with sending the data to the database
-      sendToDatabase(payload);
-    }
-  } catch (err) {
-    Logger.log("Error occurred during conflict check: " + err.toString());
-  }
-}
-
-// Function to send data to the Flask server (if no conflict)
+// Function to send data to the Flask server
 function sendToDatabase(payload) {
   var options = {
     'method' : 'post',
@@ -72,17 +46,9 @@ function sendToDatabase(payload) {
 
   // Send the request to your Flask server
   try {
-    var response = UrlFetchApp.fetch('https://e5c0-2401-4900-1f25-2e8c-6496-3bc4-fb21-c731.ngrok-free.app/update-database', options);
+    var response = UrlFetchApp.fetch('https://d933-2401-4900-1cb9-8539-24c4-146a-a7b0-f433.ngrok-free.app/update-database', options);
     Logger.log("Response from server: " + response.getContentText());
   } catch (err) {
     Logger.log("Error occurred: " + err.toString());
   }
-}
-
-// Function to revert the Google Sheets row to the database data if there is a conflict
-function revertGoogleSheetRow(row, databaseRow) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var lastColumn = sheet.getLastColumn();
-  sheet.getRange(row, 1, 1, lastColumn).setValues([databaseRow]);
-  Logger.log("Google Sheets row reverted to database data.");
 }
